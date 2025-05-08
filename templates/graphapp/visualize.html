@@ -1,0 +1,240 @@
+{% extends 'graphapp/base.html' %}
+
+{% block title %}Visualize Graph - MrGraphy{% endblock %}
+
+{% block extra_css %}
+<style>
+    .graph-container {
+        width: 100%;
+        height: 700px;
+        overflow: hidden;
+        position: relative;
+        border-radius: 5px;
+        background-color: #fafafa;
+    }
+    
+    .controls-container {
+        padding: 15px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 15px;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+    
+    .legend-color {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .legend-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-width: 250px;
+    }
+    
+    .relationship-arrow {
+        position: relative;
+        display: inline-block;
+        width: 25px;
+        height: 2px;
+        background-color: #888;
+        margin: 0 5px;
+    }
+    
+    .relationship-arrow:after {
+        content: '';
+        position: absolute;
+        right: -2px;
+        top: -4px;
+        width: 0;
+        height: 0;
+        border-left: 6px solid #888;
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="controls-container">
+            <h4>Graph Controls</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="nodeTypeFilter">Filter Node Types:</label>
+                        <select class="form-select" id="nodeTypeFilter" multiple>
+                            <option value="all" selected>All Types</option>
+                            {% for label, color in node_labels.items %}
+                            <option value="{{ label }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="relationshipFilter">Filter Relationships:</label>
+                        <select class="form-select" id="relationshipFilter" multiple>
+                            <option value="all" selected>All Relationships</option>
+                            {% for rel_type in relationship_types %}
+                            <option value="{{ rel_type }}">{{ rel_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="layoutType">Layout Algorithm:</label>
+                        <select class="form-select" id="layoutType">
+                            <option value="spring">Spring Layout</option>
+                            <option value="kamada_kawai" selected>Kamada-Kawai</option>
+                            <option value="circular">Circular Layout</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <button id="applyFilters" class="btn btn-primary">Apply Filters</button>
+                <button id="resetFilters" class="btn btn-secondary ms-2">Reset Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2>Graph Visualization</h2>
+        <button class="btn btn-sm btn-outline-secondary" id="toggleLegend">Toggle Legend</button>
+    </div>
+    <div class="card-body p-0">
+        {% if graph_html %}
+            <div class="graph-container">
+                {{ graph_html|safe }}
+                <div id="legend" class="legend-panel">
+                    <h5 class="mb-3">Legend</h5>
+                    <div class="mb-3">
+                        <h6>Node Types</h6>
+                        {% for label, color in node_labels.items %}
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: {{ color }};"></div>
+                            <span>{{ label }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div>
+                        <h6>Relationship Types</h6>
+                        {% for rel_type in relationship_types %}
+                        <div class="legend-item">
+                            <span class="relationship-arrow"></span>
+                            <span>{{ rel_type }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info m-3">
+                <p>No graph data to visualize. You need to add nodes and relationships first.</p>
+                <div class="mt-3">
+                    <a href="{% url 'add_node' %}" class="btn btn-primary me-2">Add Node</a>
+                    <a href="{% url 'add_relationship' %}" class="btn btn-secondary">Add Relationship</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Graph Insights</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Statistics</h5>
+                                <p><strong>Nodes:</strong> {{ node_labels|length }}</p>
+                                <p><strong>Relationships:</strong> {{ relationship_types|length }}</p>
+                                <p><strong>Node Types:</strong> {{ node_labels.keys|length }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Usage Tips</h5>
+                                <ul>
+                                    <li><strong>Pan:</strong> Click and drag to move around the graph</li>
+                                    <li><strong>Zoom:</strong> Use mouse wheel or pinch gesture</li>
+                                    <li><strong>Information:</strong> Hover over nodes and relationships for details</li>
+                                    <li><strong>Reset View:</strong> Use the "Reset Zoom" button in the graph controls</li>
+                                    <li><strong>Filter:</strong> Use the controls above to show specific node or relationship types</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle legend visibility
+    document.getElementById('toggleLegend').addEventListener('click', function() {
+        const legend = document.getElementById('legend');
+        if (legend.style.display === 'none') {
+            legend.style.display = 'block';
+        } else {
+            legend.style.display = 'none';
+        }
+    });
+    
+    // Make the graph responsive
+    window.addEventListener('resize', function() {
+        const graphDiv = document.querySelector('.js-plotly-plot');
+        if (graphDiv) {
+            Plotly.relayout(graphDiv, {
+                width: document.querySelector('.graph-container').offsetWidth,
+                height: 700
+            });
+        }
+    });
+    
+    // Apply filters when the button is clicked
+    document.getElementById('applyFilters').addEventListener('click', function() {
+        // This would typically send a request to the server to apply filters
+        // For now, we'll just alert that this feature is coming soon
+        alert('Advanced filtering will be enabled in the next update!');
+    });
+    
+    // Reset filters
+    document.getElementById('resetFilters').addEventListener('click', function() {
+        document.getElementById('nodeTypeFilter').value = 'all';
+        document.getElementById('relationshipFilter').value = 'all';
+        document.getElementById('layoutType').value = 'kamada_kawai';
+        // This would typically trigger a refresh of the graph
+    });
+</script>
+{% endblock %} 

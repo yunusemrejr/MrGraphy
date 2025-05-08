@@ -1,0 +1,47 @@
+{% extends 'graphapp/base.html' %}
+
+{% block title %}MrGraphy - Graph Database Visualization{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded">
+    <h1 class="display-4">Welcome to MrGraphy</h1>
+    <p class="lead">Create, store, and visualize graph data with ease.</p>
+    <hr class="my-4">
+    <p>Add nodes and relationships to create your graph database, then visualize the connections.</p>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-primary btn-lg" href="{% url 'add_node' %}" role="button">Create Node</a>
+        <a class="btn btn-secondary btn-lg" href="{% url 'add_relationship' %}" role="button">Add Relationship</a>
+        <a class="btn btn-success btn-lg" href="{% url 'visualize' %}" role="button">Visualize Graph</a>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Create Nodes</h5>
+                <p class="card-text">Add entities to your graph database with customizable properties.</p>
+                <a href="{% url 'add_node' %}" class="btn btn-primary">Add Node</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Define Relationships</h5>
+                <p class="card-text">Connect your nodes with meaningful relationships and properties.</p>
+                <a href="{% url 'add_relationship' %}" class="btn btn-primary">Add Relationship</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Visualize Connections</h5>
+                <p class="card-text">Turn your data into interactive visual graphs.</p>
+                <a href="{% url 'visualize' %}" class="btn btn-primary">Visualize</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

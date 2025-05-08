@@ -1,0 +1,110 @@
+{% extends 'graphapp/base.html' %}
+
+{% block title %}Graph Data - MrGraphy{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Nodes</h3>
+                <a href="{% url 'add_node' %}" class="btn btn-primary btn-sm">Add Node</a>
+            </div>
+            <div class="card-body">
+                {% if nodes %}
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Label</th>
+                                <th>Name</th>
+                                <th>Properties</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for node in nodes %}
+                                <tr>
+                                    <td>{{ node.label }}</td>
+                                    <td>{{ node.name }}</td>
+                                    <td>
+                                        {% if node.properties %}
+                                            <ul class="list-unstyled mb-0">
+                                                {% for key, value in node.properties.items %}
+                                                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <em>No properties</em>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="alert alert-info">
+                        No nodes available. <a href="{% url 'add_node' %}">Add some nodes</a> to get started.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Relationships</h3>
+                <a href="{% url 'add_relationship' %}" class="btn btn-primary btn-sm">Add Relationship</a>
+            </div>
+            <div class="card-body">
+                {% if relationships %}
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Relationship</th>
+                                <th>Target</th>
+                                <th>Properties</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rel in relationships %}
+                                <tr>
+                                    <td>{{ rel.source.name }}</td>
+                                    <td><strong>{{ rel.type }}</strong></td>
+                                    <td>{{ rel.target.name }}</td>
+                                    <td>
+                                        {% if rel.properties %}
+                                            <ul class="list-unstyled mb-0">
+                                                {% for key, value in rel.properties.items %}
+                                                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <em>No properties</em>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="alert alert-info">
+                        No relationships available. {% if nodes.count >= 2 %}<a href="{% url 'add_relationship' %}">Create relationships</a> between your nodes.{% else %}Add at least two nodes to create relationships.{% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h4>Ready to visualize your graph?</h4>
+                <a href="{% url 'visualize' %}" class="btn btn-success">Visualize Graph</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

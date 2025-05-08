@@ -1,0 +1,63 @@
+{% extends 'graphapp/base.html' %}
+
+{% block title %}Add Relationship - MrGraphy{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>Add New Relationship</h2>
+    </div>
+    <div class="card-body">
+        {% if nodes.count < 2 %}
+            <div class="alert alert-warning">
+                <p>You need at least two nodes to create a relationship.</p>
+                <a href="{% url 'add_node' %}" class="btn btn-primary">Create Node</a>
+            </div>
+        {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="source" class="form-label">Source Node</label>
+                    <select class="form-select" id="source" name="source" required>
+                        <option value="" selected disabled>Select a source node</option>
+                        {% for node in nodes %}
+                            <option value="{{ node.id }}">{{ node.label }}: {{ node.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="type" class="form-label">Relationship Type</label>
+                    <input type="text" class="form-control" id="type" name="type" required placeholder="e.g., KNOWS, WORKS_FOR, OWNS">
+                    <div class="form-text">The type of connection between the nodes.</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="target" class="form-label">Target Node</label>
+                    <select class="form-select" id="target" name="target" required>
+                        <option value="" selected disabled>Select a target node</option>
+                        {% for node in nodes %}
+                            <option value="{{ node.id }}">{{ node.label }}: {{ node.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Properties</label>
+                    <div id="properties-container">
+                        <!-- Property fields will be added here -->
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary" onclick="addProperty('properties-container')">
+                        Add Property
+                    </button>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'graph_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Relationship</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

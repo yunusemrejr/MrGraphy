@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MrGraphy{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    {% load static %}
+    <link href="{% static 'graphapp/css/styles.css' %}" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card {
+            margin-bottom: 1.5rem;
+        }
+        .property-group {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid #eee;
+            border-radius: 0.25rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        footer {
+            margin-top: 2rem;
+            padding: 1rem 0;
+            background-color: #f1f1f1;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="{% url 'index' %}">
+                    <i class="fas fa-project-diagram me-2"></i>MrGraphy
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'index' %}">
+                                <i class="fas fa-home me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'add_node' %}">
+                                <i class="fas fa-plus-circle me-1"></i> Add Node
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'add_relationship' %}">
+                                <i class="fas fa-link me-1"></i> Add Relationship
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'graph_list' %}">
+                                <i class="fas fa-table me-1"></i> View Data
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'visualize' %}">
+                                <i class="fas fa-chart-network me-1"></i> Visualize
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <footer>
+            <div class="container">
+                <p>MrGraphy - A powerful graph visualization and management tool</p>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% load static %}
+    <script src="{% static 'graphapp/js/graph-visualization.js' %}"></script>
+    <script>
+        function addProperty(containerId) {
+            const container = document.getElementById(containerId);
+            const propertyGroups = container.getElementsByClassName('property-group');
+            const index = propertyGroups.length;
+            
+            const newGroup = document.createElement('div');
+            newGroup.className = 'property-group';
+            newGroup.innerHTML = `
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="prop_key_${index}">Property Key</label>
+                            <input type="text" class="form-control" id="prop_key_${index}" name="prop_key_${index}" placeholder="Enter key">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-group">
+                            <label for="prop_value_${index}">Property Value</label>
+                            <input type="text" class="form-control" id="prop_value_${index}" name="prop_value_${index}" placeholder="Enter value">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger mt-4" onclick="this.parentNode.parentNode.parentNode.remove()">Remove</button>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(newGroup);
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 
