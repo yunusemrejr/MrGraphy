@@ -1,0 +1,12 @@
+MrGraphy - Graph Database Visualization Tool
+Version: 0.1.0-beta
+Release Date: May 8, 2025
+Author: Yunus Emre Vurgun
+
+Change Log:
+- Initial beta release
+- Interactive graph visualization with filtering
+- Support for Neo4j graph database
+- Custom node and relationship properties
+- Multiple graph layout algorithms
+- Custom color scheme with teal/green/yellow palette 

@@ -73,54 +73,76 @@
 <div class="row mb-3">
     <div class="col-md-12">
         <div class="controls-container">
-            <h4>Graph Controls</h4>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="nodeTypeFilter">Filter Node Types:</label>
-                        <select class="form-select" id="nodeTypeFilter" multiple>
-                            <option value="all" selected>All Types</option>
-                            {% for label, color in node_labels.items %}
-                            <option value="{{ label }}">{{ label }}</option>
-                            {% endfor %}
-                        </select>
+            <h4 class="mb-3">Graph Controls</h4>
+            <form id="filterForm" method="get" action="{% url 'visualize' %}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="nodeTypeFilter" class="form-label">Filter Node Types:</label>
+                            <select class="form-select" id="nodeTypeFilter" name="node_type">
+                                <option value="all" {% if selected_node_type == "all" %}selected{% endif %}>All Types</option>
+                                {% for label in all_node_labels %}
+                                <option value="{{ label }}" {% if selected_node_type == label %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="relationshipFilter" class="form-label">Filter Relationships:</label>
+                            <select class="form-select" id="relationshipFilter" name="relationship">
+                                <option value="all" {% if selected_relationship == "all" %}selected{% endif %}>All Relationships</option>
+                                {% for rel_type in all_relationship_types %}
+                                <option value="{{ rel_type }}" {% if selected_relationship == rel_type %}selected{% endif %}>{{ rel_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="layoutType" class="form-label">Layout Algorithm:</label>
+                            <select class="form-select" id="layoutType" name="layout">
+                                <option value="spring" {% if selected_layout == "spring" %}selected{% endif %}>Spring Layout</option>
+                                <option value="kamada_kawai" {% if selected_layout == "kamada_kawai" %}selected{% endif %}>Kamada-Kawai</option>
+                                <option value="circular" {% if selected_layout == "circular" %}selected{% endif %}>Circular Layout</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="relationshipFilter">Filter Relationships:</label>
-                        <select class="form-select" id="relationshipFilter" multiple>
-                            <option value="all" selected>All Relationships</option>
-                            {% for rel_type in relationship_types %}
-                            <option value="{{ rel_type }}">{{ rel_type }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                
+                <div class="mt-3">
+                    <button type="submit" id="applyFilters" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'visualize' %}" class="btn btn-secondary ms-2" id="resetFilters">
+                        <i class="fas fa-redo me-1"></i> Reset Filters
+                    </a>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="layoutType">Layout Algorithm:</label>
-                        <select class="form-select" id="layoutType">
-                            <option value="spring">Spring Layout</option>
-                            <option value="kamada_kawai" selected>Kamada-Kawai</option>
-                            <option value="circular">Circular Layout</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-3">
-                <button id="applyFilters" class="btn btn-primary">Apply Filters</button>
-                <button id="resetFilters" class="btn btn-secondary ms-2">Reset Filters</button>
-            </div>
+            </form>
         </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h2>Graph Visualization</h2>
-        <button class="btn btn-sm btn-outline-secondary" id="toggleLegend">Toggle Legend</button>
+        <h2 class="mb-0">Graph Visualization</h2>
+        <div>
+            <span class="badge rounded-pill bg-light text-dark me-2">
+                <i class="fas fa-filter me-1"></i>
+                {% if selected_node_type != "all" %}
+                Node: {{ selected_node_type }}
+                {% endif %}
+                {% if selected_relationship != "all" %}
+                Rel: {{ selected_relationship }}
+                {% endif %}
+                {% if selected_node_type == "all" and selected_relationship == "all" %}
+                No filters
+                {% endif %}
+            </span>
+            <button class="btn btn-sm btn-outline-secondary" id="toggleLegend">
+                <i class="fas fa-list me-1"></i> Toggle Legend
+            </button>
+        </div>
     </div>
     <div class="card-body p-0">
         {% if graph_html %}
@@ -147,13 +169,27 @@
                         {% endfor %}
                     </div>
                 </div>
+                <div class="graph-overlay">
+                    <div class="spinner"></div>
+                </div>
             </div>
         {% else %}
             <div class="alert alert-info m-3">
-                <p>No graph data to visualize. You need to add nodes and relationships first.</p>
+                <p>No graph data to visualize. This could be because:</p>
+                <ul>
+                    <li>You haven't added any nodes or relationships yet</li>
+                    <li>The current filters don't match any data</li>
+                </ul>
                 <div class="mt-3">
-                    <a href="{% url 'add_node' %}" class="btn btn-primary me-2">Add Node</a>
-                    <a href="{% url 'add_relationship' %}" class="btn btn-secondary">Add Relationship</a>
+                    <a href="{% url 'add_node' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-plus-circle me-1"></i> Add Node
+                    </a>
+                    <a href="{% url 'add_relationship' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-link me-1"></i> Add Relationship
+                    </a>
+                    <a href="{% url 'visualize' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-redo me-1"></i> Reset Filters
+                    </a>
                 </div>
             </div>
         {% endif %}
@@ -164,30 +200,36 @@
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <h4>Graph Insights</h4>
+                <h4 class="mb-0">Graph Insights</h4>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
                         <div class="card">
+                            <div class="card-header accent-bg text-dark">
+                                <h5 class="card-title mb-0">Statistics</h5>
+                            </div>
                             <div class="card-body">
-                                <h5 class="card-title">Statistics</h5>
-                                <p><strong>Nodes:</strong> {{ node_labels|length }}</p>
-                                <p><strong>Relationships:</strong> {{ relationship_types|length }}</p>
-                                <p><strong>Node Types:</strong> {{ node_labels.keys|length }}</p>
+                                <p><strong>Visible Nodes:</strong> {{ node_labels|length }}</p>
+                                <p><strong>Visible Relationships:</strong> {{ relationship_types|length }}</p>
+                                <p><strong>Total Node Types:</strong> {{ all_node_labels|length }}</p>
+                                <p><strong>Total Relationship Types:</strong> {{ all_relationship_types|length }}</p>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-8">
                         <div class="card">
+                            <div class="card-header accent-bg text-dark">
+                                <h5 class="card-title mb-0">Usage Tips</h5>
+                            </div>
                             <div class="card-body">
-                                <h5 class="card-title">Usage Tips</h5>
-                                <ul>
+                                <ul class="mb-0">
+                                    <li><strong>Filter Nodes:</strong> Use the Node Types filter to show only specific node types</li>
+                                    <li><strong>Filter Relationships:</strong> Use the Relationships filter to show only specific connection types</li>
+                                    <li><strong>Change Layout:</strong> Try different layout algorithms to find the best visualization</li>
                                     <li><strong>Pan:</strong> Click and drag to move around the graph</li>
-                                    <li><strong>Zoom:</strong> Use mouse wheel or pinch gesture</li>
-                                    <li><strong>Information:</strong> Hover over nodes and relationships for details</li>
-                                    <li><strong>Reset View:</strong> Use the "Reset Zoom" button in the graph controls</li>
-                                    <li><strong>Filter:</strong> Use the controls above to show specific node or relationship types</li>
+                                    <li><strong>Zoom:</strong> Use mouse wheel or pinch gesture to zoom in/out</li>
+                                    <li><strong>Details:</strong> Hover over nodes and relationships for more information</li>
                                 </ul>
                             </div>
                         </div>
@@ -222,19 +264,25 @@
         }
     });
     
-    // Apply filters when the button is clicked
-    document.getElementById('applyFilters').addEventListener('click', function() {
-        // This would typically send a request to the server to apply filters
-        // For now, we'll just alert that this feature is coming soon
-        alert('Advanced filtering will be enabled in the next update!');
+    // Show loading overlay during form submission
+    document.getElementById('filterForm').addEventListener('submit', function() {
+        // Show loading overlay
+        const overlay = document.querySelector('.graph-overlay');
+        if (overlay) overlay.classList.add('active');
     });
     
-    // Reset filters
-    document.getElementById('resetFilters').addEventListener('click', function() {
-        document.getElementById('nodeTypeFilter').value = 'all';
-        document.getElementById('relationshipFilter').value = 'all';
-        document.getElementById('layoutType').value = 'kamada_kawai';
-        // This would typically trigger a refresh of the graph
+    // Initialize the graph container when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adjust graph size to container
+        const graphDiv = document.querySelector('.js-plotly-plot');
+        const container = document.querySelector('.graph-container');
+        
+        if (graphDiv && container) {
+            Plotly.relayout(graphDiv, {
+                width: container.offsetWidth,
+                height: 700
+            });
+        }
     });
 </script>
 {% endblock %} 

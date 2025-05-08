@@ -113,12 +113,25 @@ def graph_list(request):
     })
 
 def visualize_graph(request):
+    # Get filter parameters from request
+    node_type_filter = request.GET.get('node_type', 'all')
+    relationship_filter = request.GET.get('relationship', 'all')
+    layout_type = request.GET.get('layout', 'kamada_kawai')
+    
     # Create a NetworkX graph
     G = nx.DiGraph()
     
     # Add nodes and relationships from Django models
     nodes = GraphNode.objects.all()
     relationships = GraphRelationship.objects.all()
+    
+    # Apply node type filter if specified
+    if node_type_filter != 'all' and node_type_filter:
+        nodes = nodes.filter(label=node_type_filter)
+    
+    # Apply relationship filter if specified
+    if relationship_filter != 'all' and relationship_filter:
+        relationships = relationships.filter(type=relationship_filter)
     
     # Get all unique node labels for coloring
     node_labels = set(node.label for node in nodes)
@@ -140,32 +153,64 @@ def visualize_graph(request):
             label=node.label, 
             name=node.name, 
             properties=node.properties,
-            color=label_colors[node.label],
+            color=label_colors.get(node.label, "#cccccc"),
             hover_text=hover_text
         )
+    
+    # Get source and target node IDs from the filtered relationships
+    related_node_ids = set()
+    for rel in relationships:
+        related_node_ids.add(rel.source.id)
+        related_node_ids.add(rel.target.id)
+    
+    # If we're filtering relationships, make sure we include the connected nodes
+    if relationship_filter != 'all' and relationship_filter:
+        # Keep only nodes that are in relationships
+        nodes_to_remove = [node_id for node_id in G.nodes() if node_id not in related_node_ids]
+        for node_id in nodes_to_remove:
+            G.remove_node(node_id)
     
     # Add edges with more data
     for rel in relationships:
-        # Format properties for display
-        formatted_props = "<br>".join([f"<b>{k}:</b> {v}" for k, v in rel.properties.items()])
-        hover_text = f"<b>Type:</b> {rel.type}"
-        if formatted_props:
-            hover_text += f"<br><b>Properties:</b><br>{formatted_props}"
-            
-        G.add_edge(
-            rel.source.id, 
-            rel.target.id, 
-            type=rel.type, 
-            properties=rel.properties,
-            hover_text=hover_text
-        )
+        # Only add the edge if both source and target nodes exist in the graph
+        if G.has_node(rel.source.id) and G.has_node(rel.target.id):
+            # Format properties for display
+            formatted_props = "<br>".join([f"<b>{k}:</b> {v}" for k, v in rel.properties.items()])
+            hover_text = f"<b>Type:</b> {rel.type}"
+            if formatted_props:
+                hover_text += f"<br><b>Properties:</b><br>{formatted_props}"
+                
+            G.add_edge(
+                rel.source.id, 
+                rel.target.id, 
+                type=rel.type, 
+                properties=rel.properties,
+                hover_text=hover_text
+            )
     
-    # Choose a better layout for complex graphs
-    if len(G) < 10:
+    # Choose layout based on selection
+    if len(G) == 0:
+        # Empty graph, just return empty plot
+        return render(request, 'graphapp/visualize.html', {
+            'graph_html': None,
+            'node_labels': {},
+            'relationship_types': set(),
+            'selected_layout': layout_type,
+            'selected_node_type': node_type_filter,
+            'selected_relationship': relationship_filter
+        })
+    
+    # Choose layout based on parameter
+    if layout_type == 'spring':
         pos = nx.spring_layout(G, k=0.5, iterations=50)
-    else:
-        # For larger graphs, use force-directed layout with more parameters
-        pos = nx.kamada_kawai_layout(G)
+    elif layout_type == 'circular':
+        pos = nx.circular_layout(G)
+    else:  # Default to kamada_kawai
+        try:
+            pos = nx.kamada_kawai_layout(G)
+        except:
+            # Fallback to spring layout if kamada_kawai fails
+            pos = nx.spring_layout(G, k=0.5, iterations=50)
     
     # Create edges with labels and arrows
     edge_traces = []
@@ -328,13 +373,22 @@ def visualize_graph(request):
     # Extract unique node labels and relationship types for the legend
     unique_labels = {G.nodes[node]['label']: G.nodes[node]['color'] for node in G.nodes()}
     
+    # Get all possible node labels and relationship types for filter options
+    all_node_labels = {node.label for node in GraphNode.objects.all()}
+    all_relationship_types = {rel.type for rel in GraphRelationship.objects.all()}
+    
     # Convert to HTML
     graph_html = fig.to_html(full_html=False, include_plotlyjs='cdn')
     
     return render(request, 'graphapp/visualize.html', {
         'graph_html': graph_html,
         'node_labels': unique_labels,
-        'relationship_types': rel_types
+        'relationship_types': rel_types,
+        'all_node_labels': all_node_labels,
+        'all_relationship_types': all_relationship_types,
+        'selected_layout': layout_type,
+        'selected_node_type': node_type_filter,
+        'selected_relationship': relationship_filter
     })
 
 # Helper functions for the visualization

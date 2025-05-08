@@ -8,46 +8,15 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     {% load static %}
     <link href="{% static 'graphapp/css/styles.css' %}" rel="stylesheet">
-    <style>
-        body {
-            padding-top: 1.5rem;
-            padding-bottom: 1.5rem;
-            background-color: #f8f9fa;
-        }
-        .navbar {
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .card {
-            margin-bottom: 1.5rem;
-        }
-        .property-group {
-            margin-bottom: 1rem;
-            padding: 1rem;
-            border: 1px solid #eee;
-            border-radius: 0.25rem;
-        }
-        .navbar-brand {
-            font-weight: bold;
-            color: #0d6efd;
-        }
-        footer {
-            margin-top: 2rem;
-            padding: 1rem 0;
-            background-color: #f1f1f1;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #666;
-        }
-    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
                 <a class="navbar-brand" href="{% url 'index' %}">
                     <i class="fas fa-project-diagram me-2"></i>MrGraphy
+                    <span class="badge bg-warning text-dark ms-2">Beta - May 8, 2025</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -76,7 +45,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'visualize' %}">
-                                <i class="fas fa-chart-network me-1"></i> Visualize
+                                <i class="fas fa-project-diagram me-1"></i> Visualize
                             </a>
                         </li>
                     </ul>
@@ -88,9 +57,10 @@
             {% block content %}{% endblock %}
         </div>
         
-        <footer>
+        <footer class="mt-5 py-3 text-center rounded">
             <div class="container">
-                <p>MrGraphy - A powerful graph visualization and management tool</p>
+                <p class="mb-0">MrGraphy - A powerful graph visualization and management tool</p>
+                <small>Created by Yunus Emre Vurgun | Built with Neo4j and Django</small>
             </div>
         </footer>
     </div>
