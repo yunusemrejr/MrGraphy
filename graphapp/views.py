@@ -28,10 +28,31 @@ def get_db_connection():
     connection = Neo4jConnection(uri, user, password)
     return connection
 
+# Helper function to check Neo4j connection and set warning
+def check_neo4j_connection(request):
+    # Only check if we haven't already set the status
+    if request.session.get('neo4j_connected') is None:
+        conn = get_db_connection()
+        if not conn.connected:
+            # Set failure status in session
+            timestamp = conn.track_failure(
+                request, 
+                "Initial connection", 
+                "Neo4j database is not available. Data will only be stored locally."
+            )
+        else:
+            # Clear any existing failure status
+            if 'neo4j_failure' in request.session:
+                del request.session['neo4j_failure']
+            request.session['neo4j_connected'] = True
+        conn.close()
+
 def index(request):
+    check_neo4j_connection(request)
     return render(request, 'graphapp/index.html')
 
 def add_node(request):
+    check_neo4j_connection(request)
     if request.method == 'POST':
         label = request.POST.get('label')
         name = request.POST.get('name')
@@ -57,30 +78,42 @@ def add_node(request):
         try:
             conn = get_db_connection()
             properties['name'] = name
-            result = conn.create_node(label, properties)
+            result = conn.create_node(label, properties, request)
             if result and result[0]['n'] is not None:
                 node_id = result[0]['n'].id
                 node.node_id = str(node_id)
                 node.save()
+            else:
+                conn.track_failure(request, f"Node creation failed: {label} {name}", 
+                               "Neo4j operation completed but node not created properly")
             conn.close()
         except Exception as e:
-            print(f"Error creating Neo4j node: {e}")
+            error_msg = f"Error creating Neo4j node: {e}"
+            print(error_msg)
+            conn = get_db_connection()
+            conn.track_failure(request, f"Node creation failed: {label} {name}", error_msg)
+            conn.close()
         
         return redirect('graph_list')
     
     return render(request, 'graphapp/add_node.html')
 
 def delete_node(request, node_id):
+    check_neo4j_connection(request)
     node = get_object_or_404(GraphNode, id=node_id)
     
     # Delete from Neo4j
     try:
         if node.node_id:
             conn = get_db_connection()
-            conn.delete_node(int(node.node_id))
+            result = conn.delete_node(int(node.node_id), request)
             conn.close()
     except Exception as e:
-        print(f"Error deleting Neo4j node: {e}")
+        error_msg = f"Error deleting Neo4j node: {e}"
+        print(error_msg)
+        conn = get_db_connection()
+        conn.track_failure(request, f"Node deletion failed: {node.label} {node.name}", error_msg)
+        conn.close()
     
     # Delete from Django
     node_name = node.name
@@ -90,16 +123,21 @@ def delete_node(request, node_id):
     return redirect('graph_list')
 
 def delete_relationship(request, relationship_id):
+    check_neo4j_connection(request)
     rel = get_object_or_404(GraphRelationship, id=relationship_id)
     
     # Delete from Neo4j
     try:
         if rel.relationship_id:
             conn = get_db_connection()
-            conn.delete_relationship(int(rel.relationship_id))
+            result = conn.delete_relationship(int(rel.relationship_id), request)
             conn.close()
     except Exception as e:
-        print(f"Error deleting Neo4j relationship: {e}")
+        error_msg = f"Error deleting Neo4j relationship: {e}"
+        print(error_msg)
+        conn = get_db_connection()
+        conn.track_failure(request, f"Relationship deletion failed: {rel.type}", error_msg)
+        conn.close()
     
     # Delete from Django
     rel_info = str(rel)
@@ -109,6 +147,7 @@ def delete_relationship(request, relationship_id):
     return redirect('graph_list')
 
 def add_relationship(request):
+    check_neo4j_connection(request)
     if request.method == 'POST':
         source_id = request.POST.get('source')
         target_id = request.POST.get('target')
@@ -142,15 +181,26 @@ def add_relationship(request):
                     int(source.node_id), 
                     int(target.node_id), 
                     rel_type, 
-                    properties
+                    properties,
+                    request
                 )
                 if result and result[0]['r'] is not None:
                     rel_id = result[0]['r'].id
                     rel.relationship_id = str(rel_id)
                     rel.save()
+                else:
+                    conn.track_failure(request, f"Relationship creation failed: {rel_type}", 
+                                   "Neo4j operation completed but relationship not created properly")
+            else:
+                conn.track_failure(request, f"Relationship creation failed: {rel_type}", 
+                               "Node IDs not available in Neo4j")
             conn.close()
         except Exception as e:
-            print(f"Error creating Neo4j relationship: {e}")
+            error_msg = f"Error creating Neo4j relationship: {e}"
+            print(error_msg)
+            conn = get_db_connection()
+            conn.track_failure(request, f"Relationship creation failed: {rel_type}", error_msg)
+            conn.close()
         
         return redirect('graph_list')
     
@@ -158,6 +208,7 @@ def add_relationship(request):
     return render(request, 'graphapp/add_relationship.html', {'nodes': nodes})
 
 def graph_list(request):
+    check_neo4j_connection(request)
     # Get filter values
     node_label_filter = request.GET.get('node_label', '')
     rel_type_filter = request.GET.get('rel_type', '')
@@ -189,6 +240,7 @@ def graph_list(request):
     return render(request, 'graphapp/graph_list.html', context)
 
 def toggle_demo_mode(request):
+    check_neo4j_connection(request)
     # Check the current state
     is_demo_mode = request.session.get('demo_mode', False)
     
@@ -212,7 +264,7 @@ def toggle_demo_mode(request):
         # Try to create demo data in Neo4j, but continue if it fails
         try:
             conn = get_db_connection()
-            conn.get_demo_data()
+            conn.get_demo_data(request)
             conn.close()
         except Exception as e:
             print(f"Warning: Could not create Neo4j demo data: {e}")
@@ -309,6 +361,7 @@ def toggle_demo_mode(request):
     return redirect(next_page)
 
 def visualize_graph(request):
+    check_neo4j_connection(request)
     # Get filter parameters from request
     node_type_filter = request.GET.get('node_type', 'all')
     relationship_filter = request.GET.get('relationship', 'all')
@@ -557,4 +610,19 @@ def generate_distinct_colors(n):
     return colors
 
 def calculate_angle(x0, y0, x1, y1):
-    return np.arctan2(y1 - y0, x1 - x0) 
+    return np.arctan2(y1 - y0, x1 - x0)
+
+def reset_neo4j_status(request):
+    if request.method == 'POST':
+        # Clear the Neo4j failure flag
+        if 'neo4j_failure' in request.session:
+            del request.session['neo4j_failure']
+        request.session['neo4j_connected'] = None
+        
+        # Try to connect to Neo4j
+        conn = get_db_connection()
+        is_connected = conn.connected
+        conn.close()
+        
+        return JsonResponse({'success': True, 'connected': is_connected})
+    return JsonResponse({'success': False}, status=400) 

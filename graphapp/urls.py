@@ -10,4 +10,5 @@ urlpatterns = [
     path('delete-node/<int:node_id>/', views.delete_node, name='delete_node'),
     path('delete-relationship/<int:relationship_id>/', views.delete_relationship, name='delete_relationship'),
     path('toggle-demo-mode/', views.toggle_demo_mode, name='toggle_demo_mode'),
+    path('reset-neo4j-status/', views.reset_neo4j_status, name='reset_neo4j_status'),
 ] 

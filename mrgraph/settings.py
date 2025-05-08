@@ -8,7 +8,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# SECURITY WARNING: keep the secret key in production secret if you are not using a development environment
 SECRET_KEY = 'django-insecure-m9zv$g#n+sx7a9jc5cw_n15mj3ypbdqt$nkn85-gaz&!9z1k6e'
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -36,6 +36,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'graphapp.middleware.Neo4jLoggerMiddleware',
 ]
 
 ROOT_URLCONF = 'mrgraph.urls'
@@ -69,9 +70,9 @@ DATABASES = {
 # Neo4j Configuration
 NEO4J_URI = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.environ.get("NEO4J_USER", "neo4j")
-NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "password")
+NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "mrgraphyneo4j")
 
-# Password validation
+# Password validationß
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
