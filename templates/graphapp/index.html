@@ -2,14 +2,74 @@
 
 {% block title %}MrGraphy - Graph Database Visualization{% endblock %}
 
+{% block extra_css %}
+<style>
+    .welcome-section {
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%333ab795' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        padding: 2.5rem 3rem;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .welcome-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(160,232,175,0.1) 100%);
+        z-index: 0;
+    }
+    
+    .welcome-section > * {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .feature-card {
+        transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        background: -webkit-linear-gradient(#3AB795, #45c9a6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .card-header .card-title {
+        position: relative;
+        padding-left: 10px;
+    }
+    
+    .card-header .card-title::before {
+        content: '';
+        position: absolute;
+        left: -5px;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background-color: rgba(255,255,255,0.5);
+        border-radius: 2px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card mb-4">
+<div class="card mb-4 welcome-section">
     <div class="card-body p-5">
         <h1 class="display-4">Welcome to MrGraphy</h1>
         <p class="lead">Create, store, and visualize graph data with ease.</p>
         <hr class="my-4">
         <p>Add nodes and relationships to create your graph database, then visualize the connections.</p>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-2 mt-4">
             <a class="btn btn-primary btn-lg" href="{% url 'add_node' %}" role="button">
                 <i class="fas fa-plus-circle me-1"></i> Create Node
             </a>
@@ -23,13 +83,16 @@
     </div>
 </div>
 
-<div class="row mt-4">
+<div class="row mt-5 g-4">
     <div class="col-md-4">
-        <div class="card h-100">
+        <div class="card h-100 feature-card">
             <div class="card-header">
                 <h5 class="card-title mb-0">Create Nodes</h5>
             </div>
             <div class="card-body">
+                <div class="text-center">
+                    <i class="fas fa-database feature-icon"></i>
+                </div>
                 <p class="card-text">Add entities to your graph database with customizable properties.</p>
                 <ul>
                     <li>Define node labels (types)</li>
@@ -37,7 +100,7 @@
                     <li>Store in both Neo4j and Django</li>
                 </ul>
             </div>
-            <div class="card-footer">
+            <div class="card-footer text-center">
                 <a href="{% url 'add_node' %}" class="btn btn-primary">
                     <i class="fas fa-plus-circle me-1"></i> Add Node
                 </a>
@@ -45,11 +108,14 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card h-100">
+        <div class="card h-100 feature-card">
             <div class="card-header">
                 <h5 class="card-title mb-0">Define Relationships</h5>
             </div>
             <div class="card-body">
+                <div class="text-center">
+                    <i class="fas fa-link feature-icon"></i>
+                </div>
                 <p class="card-text">Connect your nodes with meaningful relationships and properties.</p>
                 <ul>
                     <li>Create directional connections</li>
@@ -57,7 +123,7 @@
                     <li>Add properties to relationships</li>
                 </ul>
             </div>
-            <div class="card-footer">
+            <div class="card-footer text-center">
                 <a href="{% url 'add_relationship' %}" class="btn btn-secondary">
                     <i class="fas fa-link me-1"></i> Add Relationship
                 </a>
@@ -65,11 +131,14 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card h-100">
+        <div class="card h-100 feature-card">
             <div class="card-header accent-bg">
                 <h5 class="card-title mb-0">Visualize Connections</h5>
             </div>
             <div class="card-body">
+                <div class="text-center">
+                    <i class="fas fa-project-diagram feature-icon"></i>
+                </div>
                 <p class="card-text">Turn your data into interactive visual graphs.</p>
                 <ul>
                     <li>Interactive graph visualization</li>
@@ -77,7 +146,7 @@
                     <li>Filter by node and relationship types</li>
                 </ul>
             </div>
-            <div class="card-footer">
+            <div class="card-footer text-center">
                 <a href="{% url 'visualize' %}" class="btn accent-bg text-dark">
                     <i class="fas fa-project-diagram me-1"></i> Visualize
                 </a>

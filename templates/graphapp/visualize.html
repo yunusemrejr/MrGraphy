@@ -72,6 +72,14 @@
 {% block content %}
 <div class="row mb-3">
     <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Graph Visualization</h2>
+            {% if is_demo_mode %}
+                <div class="badge bg-warning text-dark p-2 fs-6">
+                    <i class="fas fa-vial me-1"></i> Demo Mode Active
+                </div>
+            {% endif %}
+        </div>
         <div class="controls-container">
             <h4 class="mb-3">Graph Controls</h4>
             <form id="filterForm" method="get" action="{% url 'visualize' %}">
@@ -117,6 +125,13 @@
                     <a href="{% url 'visualize' %}" class="btn btn-secondary ms-2" id="resetFilters">
                         <i class="fas fa-redo me-1"></i> Reset Filters
                     </a>
+                    <a href="{% url 'toggle_demo_mode' %}?next=visualize" class="btn btn-primary flex-grow-1">
+                        {% if is_demo_mode %}
+                            <i class="fas fa-database me-1"></i> Switch to Real Data
+                        {% else %}
+                            <i class="fas fa-vial me-1"></i> Switch to Demo Data
+                        {% endif %}
+                    </a>
                 </div>
             </form>
         </div>
@@ -139,7 +154,7 @@
                 No filters
                 {% endif %}
             </span>
-            <button class="btn btn-sm btn-outline-secondary" id="toggleLegend">
+            <button class="btn btn-sm btn-secondary" id="toggleLegend">
                 <i class="fas fa-list me-1"></i> Toggle Legend
             </button>
         </div>

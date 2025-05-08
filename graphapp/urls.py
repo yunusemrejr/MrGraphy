@@ -7,4 +7,7 @@ urlpatterns = [
     path('add-relationship/', views.add_relationship, name='add_relationship'),
     path('graph-list/', views.graph_list, name='graph_list'),
     path('visualize/', views.visualize_graph, name='visualize'),
+    path('delete-node/<int:node_id>/', views.delete_node, name='delete_node'),
+    path('delete-relationship/<int:relationship_id>/', views.delete_relationship, name='delete_relationship'),
+    path('toggle-demo-mode/', views.toggle_demo_mode, name='toggle_demo_mode'),
 ] 

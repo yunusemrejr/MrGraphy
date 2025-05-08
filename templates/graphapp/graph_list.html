@@ -3,43 +3,126 @@
 {% block title %}Graph Data - MrGraphy{% endblock %}
 
 {% block content %}
+{% if messages %}
+<div class="row mb-3">
+    <div class="col-12">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>Graph Data</h2>
+        {% if is_demo_mode %}
+            <div class="badge bg-warning text-dark p-2 fs-6">Demo Mode Active</div>
+        {% endif %}
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'toggle_demo_mode' %}" class="btn btn-primary flex-grow-1">
+            {% if is_demo_mode %}
+                <i class="fas fa-database me-1"></i> Switch to Real Data
+            {% else %}
+                <i class="fas fa-vial me-1"></i> Switch to Demo Data
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Filter Data</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'graph_list' %}" class="row g-3">
+                    <div class="col-md-5">
+                        <label for="node_label" class="form-label">Node Label:</label>
+                        <select name="node_label" id="node_label" class="form-select">
+                            <option value="">All Labels</option>
+                            {% for label in all_node_labels %}
+                                <option value="{{ label }}" {% if node_label_filter == label %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="rel_type" class="form-label">Relationship Type:</label>
+                        <select name="rel_type" id="rel_type" class="form-select">
+                            <option value="">All Types</option>
+                            {% for type in all_rel_types %}
+                                <option value="{{ type }}" {% if rel_type_filter == type %}selected{% endif %}>{{ type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="d-flex gap-2 w-100">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="fas fa-filter me-1"></i> Filter
+                            </button>
+                            <a href="{% url 'graph_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-redo"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3>Nodes</h3>
-                <a href="{% url 'add_node' %}" class="btn btn-primary btn-sm">Add Node</a>
+                <h3>Nodes{% if node_label_filter %} - {{ node_label_filter }}{% endif %}</h3>
+                <a href="{% url 'add_node' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> Add Node
+                </a>
             </div>
             <div class="card-body">
                 {% if nodes %}
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Label</th>
-                                <th>Name</th>
-                                <th>Properties</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for node in nodes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td>{{ node.label }}</td>
-                                    <td>{{ node.name }}</td>
-                                    <td>
-                                        {% if node.properties %}
-                                            <ul class="list-unstyled mb-0">
-                                                {% for key, value in node.properties.items %}
-                                                    <li><strong>{{ key }}:</strong> {{ value }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% else %}
-                                            <em>No properties</em>
-                                        {% endif %}
-                                    </td>
+                                    <th>Label</th>
+                                    <th>Name</th>
+                                    <th>Properties</th>
+                                    <th>Actions</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {% for node in nodes %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge" style="background-color: #3AB795">{{ node.label }}</span>
+                                        </td>
+                                        <td>{{ node.name }}</td>
+                                        <td>
+                                            {% if node.properties %}
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for key, value in node.properties.items %}
+                                                        <li><strong>{{ key }}:</strong> {{ value }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <em>No properties</em>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'delete_node' node.id %}" class="btn btn-danger btn-sm" 
+                                               onclick="return confirm('Are you sure you want to delete this node? This will also delete all its relationships.')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 {% else %}
                     <div class="alert alert-info">
                         No nodes available. <a href="{% url 'add_node' %}">Add some nodes</a> to get started.
@@ -52,41 +135,52 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3>Relationships</h3>
-                <a href="{% url 'add_relationship' %}" class="btn btn-primary btn-sm">Add Relationship</a>
+                <h3>Relationships{% if rel_type_filter %} - {{ rel_type_filter }}{% endif %}</h3>
+                <a href="{% url 'add_relationship' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> Add Relationship
+                </a>
             </div>
             <div class="card-body">
                 {% if relationships %}
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Source</th>
-                                <th>Relationship</th>
-                                <th>Target</th>
-                                <th>Properties</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for rel in relationships %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
                                 <tr>
-                                    <td>{{ rel.source.name }}</td>
-                                    <td><strong>{{ rel.type }}</strong></td>
-                                    <td>{{ rel.target.name }}</td>
-                                    <td>
-                                        {% if rel.properties %}
-                                            <ul class="list-unstyled mb-0">
-                                                {% for key, value in rel.properties.items %}
-                                                    <li><strong>{{ key }}:</strong> {{ value }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        {% else %}
-                                            <em>No properties</em>
-                                        {% endif %}
-                                    </td>
+                                    <th>Source</th>
+                                    <th>Relationship</th>
+                                    <th>Target</th>
+                                    <th>Properties</th>
+                                    <th>Actions</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {% for rel in relationships %}
+                                    <tr>
+                                        <td>{{ rel.source.name }}</td>
+                                        <td><span class="badge bg-secondary">{{ rel.type }}</span></td>
+                                        <td>{{ rel.target.name }}</td>
+                                        <td>
+                                            {% if rel.properties %}
+                                                <ul class="list-unstyled mb-0">
+                                                    {% for key, value in rel.properties.items %}
+                                                        <li><strong>{{ key }}:</strong> {{ value }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% else %}
+                                                <em>No properties</em>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'delete_relationship' rel.id %}" class="btn btn-danger btn-sm"
+                                               onclick="return confirm('Are you sure you want to delete this relationship?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 {% else %}
                     <div class="alert alert-info">
                         No relationships available. {% if nodes.count >= 2 %}<a href="{% url 'add_relationship' %}">Create relationships</a> between your nodes.{% else %}Add at least two nodes to create relationships.{% endif %}
@@ -102,7 +196,9 @@
         <div class="card">
             <div class="card-body text-center">
                 <h4>Ready to visualize your graph?</h4>
-                <a href="{% url 'visualize' %}" class="btn btn-success">Visualize Graph</a>
+                <a href="{% url 'visualize' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-project-diagram me-1"></i> Visualize Graph
+                </a>
             </div>
         </div>
     </div>
